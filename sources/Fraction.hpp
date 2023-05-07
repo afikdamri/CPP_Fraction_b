@@ -66,4 +66,4 @@ namespace ariel
         Fraction &operator--();
         Fraction operator--(int);
     };
-}
+};

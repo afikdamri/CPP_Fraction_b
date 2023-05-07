@@ -33,5 +33,16 @@ int main() {
     if (a > 1.1) cout << " a is bigger than 1.1" << endl;
     else cout << " a is smaller than 1.1" << endl;
 
+    Fraction f(2, 5);
+    Fraction h(4, 5);
+    cout << f.getDenominator() << endl;
+    cout << f.getNumerator() << endl;
+    float e = 0.4;
+    Fraction z = e-h;
+    cout << z.getNumerator() << endl;
+    cout << z.getDenominator() << endl;
+
+    
+
 
 }

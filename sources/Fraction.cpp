@@ -3,6 +3,8 @@ using namespace std;
 
 namespace ariel
 {
+    Fraction::Fraction() : numerator_(0), denominator_(1) {}
+
     Fraction::Fraction(int num, int den) : numerator_(num), denominator_(den)
     {
         if (den == 0)
@@ -13,8 +15,8 @@ namespace ariel
 
     Fraction::Fraction(float number)
     {
-        int num = static_cast<int>(number * 10000);
-        int den = 10000;
+        int num = static_cast<int>(number * 1000);
+        int den = 1000;
         int gcd = __gcd(num, den);
         num /= gcd;
         den /= gcd;
@@ -94,28 +96,21 @@ namespace ariel
 
     Fraction Fraction::operator-(const Fraction &fraction) const
     {
-        int num = fraction.numerator_ * denominator_ - numerator_ * fraction.denominator_;
-        int den = fraction.denominator_ * denominator_;
-        int gcd_num = __gcd(abs(num), abs(den));
-        if ((numerator_ < 0 && fraction.numerator_ > 0) || (numerator_ > 0 && fraction.numerator_ < 0))
-        {
-            num = -abs(num);
+        int new_numerator = numerator_ * fraction.denominator_ - fraction.numerator_ * denominator_;
+        int new_denominator = denominator_ * fraction.denominator_;
+        if (new_numerator < 0 && new_denominator < 0){
+            new_numerator = -new_numerator;
+            new_denominator = -new_denominator;
         }
-        else
-        {
-            num = abs(num);
+        if (new_numerator < 0 && new_denominator > 0){
+            new_numerator = -new_numerator;
+            new_denominator = -new_denominator;
         }
-        if ((denominator_ < 0 && fraction.denominator_ > 0) || (denominator_ > 0 && fraction.denominator_ < 0))
-        {
-            den = -abs(den);
-        }
-        else
-        {
-            den = abs(den);
-        }
-        num /= gcd_num;
-        den /= gcd_num;
-        return Fraction(num, den);
+        int gcd = __gcd(new_numerator, new_denominator);
+        new_numerator /= gcd;
+        new_denominator /= gcd;
+
+        return Fraction(new_numerator, new_denominator);
     }
 
     Fraction operator-(const Fraction &fraction, const float &number)
@@ -318,4 +313,4 @@ namespace ariel
         ++(*this);
         return tmp;
     }
-}
+};
