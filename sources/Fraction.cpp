@@ -1,5 +1,9 @@
 #include "Fraction.hpp"
 using namespace std;
+#include <cmath>
+#include <limits>
+#include <iostream>
+#include <sstream>
 
 namespace ariel
 {
@@ -42,10 +46,23 @@ namespace ariel
 
     istream &operator>>(istream &data, Fraction &fraction)
     {
-        int num, den;
-        char slash;
-        data >> num >> slash >> den;
-        fraction = Fraction(num, den);
+        int numerator, denominator;
+        data >> numerator >> denominator;
+
+        if (data.fail()){throw std::runtime_error("Invalid input format");}
+
+        if (denominator == 0){ throw std::runtime_error("Invalid fraction format"); }
+
+        if (numerator == 0){
+            fraction.numerator_ = 0;
+            fraction.denominator_ = 1;
+            return data;
+        }
+        int sign = (numerator < 0) != (denominator < 0) ? -1 : 1;
+        numerator = abs(numerator);
+        denominator = abs(denominator);
+        fraction.numerator_ = sign * numerator;
+        fraction.denominator_ = denominator;
         return data;
     }
 
@@ -98,11 +115,13 @@ namespace ariel
     {
         int new_numerator = numerator_ * fraction.denominator_ - fraction.numerator_ * denominator_;
         int new_denominator = denominator_ * fraction.denominator_;
-        if (new_numerator < 0 && new_denominator < 0){
+        if (new_numerator < 0 && new_denominator < 0)
+        {
             new_numerator = -new_numerator;
             new_denominator = -new_denominator;
         }
-        if (new_numerator < 0 && new_denominator > 0){
+        if (new_numerator < 0 && new_denominator > 0)
+        {
             new_numerator = -new_numerator;
             new_denominator = -new_denominator;
         }
@@ -113,16 +132,52 @@ namespace ariel
         return Fraction(new_numerator, new_denominator);
     }
 
-    Fraction operator-(const Fraction &fraction, const float &number)
-    {
-        float numerator_ = fraction.numerator_ - (fraction.denominator_ * number);
-        return Fraction(numerator_, fraction.denominator_);
-    }
-
     Fraction operator-(const float &number, const Fraction &fraction)
     {
-        float numerator_ = fraction.numerator_ - (fraction.denominator_ * number);
-        return Fraction(numerator_, fraction.denominator_);
+        int new_numerator = number * fraction.denominator_ - fraction.numerator_;
+        int new_denominator = fraction.denominator_;
+
+        if (new_numerator < 0 && new_denominator < 0)
+        {
+            new_numerator = -new_numerator;
+            new_denominator = -new_denominator;
+        }
+        else if (new_numerator < 0 && new_denominator > 0)
+        {
+            new_numerator = -new_numerator;
+            new_denominator = -new_denominator;
+        }
+
+        int gcd = __gcd(new_numerator, new_denominator);
+        new_numerator /= gcd;
+        new_denominator /= gcd;
+
+        return Fraction(new_numerator, new_denominator);
+    }
+
+    Fraction operator-(const Fraction &fraction, const float &number)
+    {
+        Fraction numberFraction(number * fraction.denominator_, fraction.denominator_);
+
+        int new_numerator = fraction.numerator_ - numberFraction.numerator_;
+        int new_denominator = fraction.denominator_;
+
+        if (new_numerator < 0 && new_denominator < 0)
+        {
+            new_numerator = -new_numerator;
+            new_denominator = -new_denominator;
+        }
+        else if (new_numerator < 0 && new_denominator > 0)
+        {
+            new_numerator = -new_numerator;
+            new_denominator = -new_denominator;
+        }
+
+        int gcd = __gcd(new_numerator, new_denominator);
+        new_numerator /= gcd;
+        new_denominator /= gcd;
+
+        return Fraction(new_numerator, new_denominator);
     }
 
     Fraction Fraction::operator/(const Fraction &fraction) const
@@ -133,29 +188,50 @@ namespace ariel
         return Fraction(num / gcd, den / gcd);
     }
 
+    Fraction floatToFraction(float number)
+    {
+        const int decimalPlaces = 3;
+        const int scale = pow(10, decimalPlaces);
+
+        int numerator = static_cast<int>(round(number * scale));
+        int denominator = scale;
+
+        int gcd = std::__gcd(numerator, denominator);
+        numerator /= gcd;
+        denominator /= gcd;
+
+        return Fraction(numerator, denominator);
+    }
+
     Fraction operator/(const Fraction &fraction, const float &number)
     {
-        int num = fraction.numerator_;
-        int den = fraction.denominator_ * number * 1000;
-        int gcd = __gcd(num, den);
-        return Fraction(num / gcd, den / gcd);
+        Fraction numberFraction = floatToFraction(number);
+        int new_numerator = fraction.numerator_ * numberFraction.denominator_;
+        int new_denominator = fraction.denominator_ * numberFraction.numerator_;
+
+        int gcd = __gcd(new_numerator, new_denominator);
+        new_numerator /= gcd;
+        new_denominator /= gcd;
+
+        return Fraction(new_numerator, new_denominator);
     }
 
     Fraction operator/(const float &number, const Fraction &fraction)
     {
-        int num = fraction.denominator_ * number * 1000;
-        int den = fraction.numerator_;
-        int gcd = __gcd(num, den);
-        return Fraction(num / gcd, den / gcd);
+        Fraction numberFraction = floatToFraction(number);
+        int new_numerator = numberFraction.numerator_ * fraction.denominator_;
+        int new_denominator = numberFraction.denominator_ * fraction.numerator_;
+
+        int gcd = __gcd(new_numerator, new_denominator);
+        new_numerator /= gcd;
+        new_denominator /= gcd;
+
+        return Fraction(new_numerator, new_denominator);
     }
 
     bool Fraction::operator<(const Fraction &fraction) const
     {
-        int commonDenominator_ = fraction.denominator_ * denominator_;
-        int numerator_1 = fraction.numerator_ * denominator_;
-        int numerator_2 = numerator_ * fraction.denominator_;
-
-        return numerator_1 < numerator_2;
+        return (numerator_ * fraction.denominator_) < (fraction.numerator_ * denominator_);
     }
 
     bool operator<(const float &number, const Fraction &fraction)
@@ -212,33 +288,31 @@ namespace ariel
 
     Fraction operator*(const float &number, const Fraction &fraction)
     {
-        float num = fraction.numerator_ * number;
-        float den = fraction.denominator_;
-        float gcd = __gcd(static_cast<int>(num), static_cast<int>(den));
-        return Fraction(num / gcd, den / gcd);
+        Fraction numberFraction = floatToFraction(number);
+        return numberFraction * fraction;
     }
 
     Fraction operator*(const Fraction &fraction, const float &number)
     {
-        float num = fraction.numerator_ * number;
-        return Fraction(num, fraction.denominator_);
+        Fraction numberFraction = floatToFraction(number);
+        return fraction * numberFraction;
     }
 
     bool Fraction::operator<=(const Fraction &fraction) const
     {
-        return (numerator_ * fraction.denominator_) <= (fraction.numerator_ * denominator_);
+        return !(Fraction(numerator_, denominator_) > fraction);
     }
 
     bool operator<=(const Fraction &fraction, const float &number)
     {
-        float result = static_cast<float>(fraction.numerator_) / fraction.denominator_;
-        return result <= number;
+        Fraction fractionNumber = floatToFraction(number);
+        return fraction <= fractionNumber;
     }
 
     bool operator<=(const float &number, const Fraction &fraction)
     {
-        float result = number / static_cast<float>(fraction.denominator_);
-        return result <= static_cast<float>(fraction.numerator_) / fraction.denominator_;
+        Fraction fractionNumber = floatToFraction(number);
+        return fractionNumber <= fraction;
     }
 
     bool Fraction::operator>=(const Fraction &fraction) const
