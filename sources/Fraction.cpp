@@ -55,7 +55,34 @@ namespace ariel
 
     ostream &operator<<(ostream &ostream, const Fraction &fraction)
     {
-        ostream << fraction.numerator_ << "/" << fraction.denominator_;
+        int num = fraction.numerator_;
+        int den = fraction.denominator_;
+
+        int gcd = __gcd(num, den);
+        num /= gcd;
+        den /= gcd;
+
+        if (den < 0)
+        {
+            num = -num;
+            den = -den;
+        }
+
+        if (num < 0)
+        {
+            ostream << "-";
+            num = -num;
+        }
+
+        if (den == 1)
+        {
+            ostream << num;
+        }
+        else
+        {
+            ostream << num << '/' << den;
+        }
+
         return ostream;
     }
 
@@ -93,9 +120,9 @@ namespace ariel
         long long num = (long long)fraction.numerator_ * denominator_ + numerator_ * fraction.denominator_;
         long long den = (long long)fraction.denominator_ * denominator_;
 
-        if (num > std::numeric_limits<int>::max() || num < std::numeric_limits<int>::min() || den > std::numeric_limits<int>::max() || den < std::numeric_limits<int>::min())
+        if (num > numeric_limits<int>::max() || num < numeric_limits<int>::min() || den > numeric_limits<int>::max() || den < numeric_limits<int>::min())
         {
-            throw std::overflow_error("Overflow in operator+");
+            throw overflow_error("Overflow in operator+");
         }
 
         int new_numerator = static_cast<int>(num);
@@ -113,7 +140,7 @@ namespace ariel
         Fraction numberFraction = floatToFraction(number);
         int num = fraction.getNumerator() * numberFraction.getDenominator() + numberFraction.getNumerator() * fraction.getDenominator();
         int den = fraction.getDenominator() * numberFraction.getDenominator();
-        int gcd = std::__gcd(num, den);
+        int gcd = __gcd(num, den);
         return Fraction(num / gcd, den / gcd);
     }
 
@@ -122,7 +149,7 @@ namespace ariel
         Fraction numberFraction = floatToFraction(number);
         int num = fraction.getNumerator() * numberFraction.getDenominator() + numberFraction.getNumerator() * fraction.getDenominator();
         int den = fraction.getDenominator() * numberFraction.getDenominator();
-        int gcd = std::__gcd(num, den);
+        int gcd = __gcd(num, den);
         return Fraction(num / gcd, den / gcd);
     }
 
@@ -131,24 +158,14 @@ namespace ariel
         long long num = (long long)numerator_ * fraction.denominator_ - (long long)fraction.numerator_ * denominator_;
         long long den = (long long)denominator_ * fraction.denominator_;
 
-        if (num > std::numeric_limits<int>::max() || num < std::numeric_limits<int>::min() || den > std::numeric_limits<int>::max() || den < std::numeric_limits<int>::min())
+        if (num > std::numeric_limits<int>::max() || num < std::numeric_limits<int>::min() ||
+            den > std::numeric_limits<int>::max() || den < std::numeric_limits<int>::min())
         {
             throw std::overflow_error("Overflow in operator-");
         }
 
         int new_numerator = static_cast<int>(num);
         int new_denominator = static_cast<int>(den);
-
-        if (new_numerator < 0 && new_denominator < 0)
-        {
-            new_numerator = -new_numerator;
-            new_denominator = -new_denominator;
-        }
-        if (new_numerator < 0 && new_denominator > 0)
-        {
-            new_numerator = -new_numerator;
-            new_denominator = -new_denominator;
-        }
 
         int gcd = __gcd(new_numerator, new_denominator);
         new_numerator /= gcd;
@@ -162,7 +179,7 @@ namespace ariel
         Fraction numberFraction = floatToFraction(number);
         int new_numerator = numberFraction.getNumerator() * fraction.getDenominator() - fraction.getNumerator() * numberFraction.getDenominator();
         int new_denominator = fraction.getDenominator() * numberFraction.getDenominator();
-        int gcd = std::__gcd(new_numerator, new_denominator);
+        int gcd = __gcd(new_numerator, new_denominator);
         return Fraction(new_numerator / gcd, new_denominator / gcd);
     }
 
@@ -171,7 +188,7 @@ namespace ariel
         Fraction numberFraction = floatToFraction(number);
         int new_numerator = fraction.getNumerator() * numberFraction.getDenominator() - numberFraction.getNumerator() * fraction.getDenominator();
         int new_denominator = fraction.getDenominator() * numberFraction.getDenominator();
-        int gcd = std::__gcd(new_numerator, new_denominator);
+        int gcd = __gcd(new_numerator, new_denominator);
         return Fraction(new_numerator / gcd, new_denominator / gcd);
     }
 
@@ -179,15 +196,19 @@ namespace ariel
     {
         if (fraction.numerator_ == 0)
         {
-            throw std::runtime_error("Divide by zero error");
+            throw runtime_error("Divide by zero error");
         }
 
         long long num = (long long)numerator_ * fraction.denominator_;
         long long den = (long long)denominator_ * fraction.numerator_;
+        cout << num << " /" << den << endl;
 
-        if (num > std::numeric_limits<int>::max() || num < std::numeric_limits<int>::min() || den > std::numeric_limits<int>::max() || den < std::numeric_limits<int>::min())
+        if ((num > numeric_limits<int>::max() && den <= numeric_limits<int>::max()) ||
+            (num < numeric_limits<int>::min() && den >= numeric_limits<int>::min()) ||
+            (den > numeric_limits<int>::max() && num <= numeric_limits<int>::max()) ||
+            (den < numeric_limits<int>::min() && num >= numeric_limits<int>::min()))
         {
-            throw std::overflow_error("Overflow in operator/");
+            throw overflow_error("Overflow in operator/");
         }
 
         int new_numerator = static_cast<int>(num);
@@ -204,7 +225,7 @@ namespace ariel
     {
         if (number == 0.0)
         {
-            throw std::runtime_error("Divide by zero error");
+            throw runtime_error("Divide by zero error");
         }
         Fraction numberFraction = floatToFraction(number);
         int new_numerator = fraction.numerator_ * numberFraction.denominator_;
@@ -219,6 +240,10 @@ namespace ariel
 
     Fraction operator/(const float &number, const Fraction &fraction)
     {
+        if (fraction.numerator_ == 0)
+        {
+            throw runtime_error("Divide by zero error");
+        }
         Fraction numberFraction = floatToFraction(number);
         int new_numerator = numberFraction.numerator_ * fraction.denominator_;
         int new_denominator = numberFraction.denominator_ * fraction.numerator_;
@@ -231,11 +256,11 @@ namespace ariel
     }
 
     bool Fraction::operator<(const Fraction &fraction) const
-{
-    int num1 = numerator_ * fraction.denominator_;
-    int num2 = fraction.numerator_ * denominator_;
-    return num1 < num2;
-}
+    {
+        int num1 = numerator_ * fraction.denominator_;
+        int num2 = fraction.numerator_ * denominator_;
+        return num1 < num2;
+    }
 
     bool operator<(const float &number, const Fraction &fraction)
     {
@@ -248,11 +273,11 @@ namespace ariel
     }
 
     bool Fraction::operator>(const Fraction &fraction) const
-{
-    int num1 = numerator_ * fraction.denominator_;
-    int num2 = fraction.numerator_ * denominator_;
-    return num1 > num2;
-}
+    {
+        int num1 = numerator_ * fraction.denominator_;
+        int num2 = fraction.numerator_ * denominator_;
+        return num1 > num2;
+    }
 
     bool operator>(const Fraction &fraction, const float &number)
     {
@@ -271,9 +296,12 @@ namespace ariel
         long long num = (long long)fraction.numerator_ * numerator_;
         long long den = (long long)fraction.denominator_ * denominator_;
 
-        if (num > std::numeric_limits<int>::max() || num < std::numeric_limits<int>::min() || den > std::numeric_limits<int>::max() || den < std::numeric_limits<int>::min())
+        if ((num > numeric_limits<int>::max() && den <= numeric_limits<int>::max()) ||
+            (num < numeric_limits<int>::min() && den >= numeric_limits<int>::min()) ||
+            (den > numeric_limits<int>::max() && num <= numeric_limits<int>::max()) ||
+            (den < numeric_limits<int>::min() && num >= numeric_limits<int>::min()))
         {
-            throw std::overflow_error("Overflow in operator*");
+            throw overflow_error("Overflow in operator*");
         }
 
         int new_numerator = static_cast<int>(num);
@@ -298,12 +326,12 @@ namespace ariel
         return fraction * numberFraction;
     }
 
-bool Fraction::operator<=(const Fraction &fraction) const
-{
-    int num1 = numerator_ * fraction.denominator_;
-    int num2 = fraction.numerator_ * denominator_;
-    return num1 <= num2;
-}
+    bool Fraction::operator<=(const Fraction &fraction) const
+    {
+        int num1 = numerator_ * fraction.denominator_;
+        int num2 = fraction.numerator_ * denominator_;
+        return num1 <= num2;
+    }
 
     bool operator<=(const Fraction &fraction, const float &number)
     {
@@ -318,11 +346,11 @@ bool Fraction::operator<=(const Fraction &fraction) const
     }
 
     bool Fraction::operator>=(const Fraction &fraction) const
-{
-    int num1 = numerator_ * fraction.denominator_;
-    int num2 = fraction.numerator_ * denominator_;
-    return num1 >= num2;
-}
+    {
+        int num1 = numerator_ * fraction.denominator_;
+        int num2 = fraction.numerator_ * denominator_;
+        return num1 >= num2;
+    }
 
     bool operator>=(const Fraction &fraction, const float &number)
     {
