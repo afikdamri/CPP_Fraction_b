@@ -21,6 +21,8 @@ namespace ariel
         int getNumerator() const;
         int getDenominator() const;
 
+        static Fraction floatToFraction(float number);
+
         friend ostream &operator<<(std::ostream &ostream, const Fraction &fraction);
         friend std::istream &operator>>(std::istream &data, Fraction &fraction);
 

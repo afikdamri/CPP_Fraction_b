@@ -52,12 +52,10 @@ int main()
   cout << fraction2.getNumerator() << " / " << fraction2.getDenominator() << endl;
 
 
-  if (fraction1 > fraction2)
+  if (fraction1 < fraction2)
   {
     cout << "yes" << endl;
-  }
-
-  if (fraction2 > fraction1)
+  }else
   {
     cout << "no" << endl;
   }

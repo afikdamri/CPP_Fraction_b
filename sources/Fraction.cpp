@@ -4,17 +4,32 @@ using namespace std;
 #include <limits>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 namespace ariel
 {
     Fraction::Fraction() : numerator_(0), denominator_(1) {}
 
-    Fraction::Fraction(int num, int den) : numerator_(num), denominator_(den)
+    Fraction::Fraction(int num, int den)
     {
-        if (den == 0)
-        {
+        if (den == 0){
             throw invalid_argument("Denominator cannot be zero!");
         }
+        if (num > 0 && den < 0){
+            numerator_ = num * -1;
+            denominator_ = den * -1;
+        }
+        else if (num < 0 && den < 0){
+            numerator_ = num * -1;
+            denominator_ = den * -1;
+        }
+        else{
+            numerator_ = num;
+            denominator_ = den;
+        }
+        int common_divisor = __gcd(abs(numerator_), abs(denominator_));
+        numerator_ /= common_divisor;
+        denominator_ /= common_divisor;
     }
 
     Fraction::Fraction(float number)
@@ -53,37 +68,10 @@ namespace ariel
         return Fraction(numerator, denominator);
     }
 
-    ostream &operator<<(ostream &ostream, const Fraction &fraction)
+    ostream &operator<<(ostream &outputStream, const Fraction &fraction)
     {
-        int num = fraction.numerator_;
-        int den = fraction.denominator_;
-
-        int gcd = __gcd(num, den);
-        num /= gcd;
-        den /= gcd;
-
-        if (den < 0)
-        {
-            num = -num;
-            den = -den;
-        }
-
-        if (num < 0)
-        {
-            ostream << "-";
-            num = -num;
-        }
-
-        if (den == 1)
-        {
-            ostream << num;
-        }
-        else
-        {
-            ostream << num << '/' << den;
-        }
-
-        return ostream;
+        outputStream << fraction.numerator_ << "/" << fraction.denominator_;
+        return outputStream;
     }
 
     istream &operator>>(istream &data, Fraction &fraction)
@@ -107,11 +95,13 @@ namespace ariel
             fraction.denominator_ = 1;
             return data;
         }
+
         int sign = (numerator < 0) != (denominator < 0) ? -1 : 1;
         numerator = abs(numerator);
         denominator = abs(denominator);
         fraction.numerator_ = sign * numerator;
         fraction.denominator_ = denominator;
+
         return data;
     }
 
@@ -158,10 +148,10 @@ namespace ariel
         long long num = (long long)numerator_ * fraction.denominator_ - (long long)fraction.numerator_ * denominator_;
         long long den = (long long)denominator_ * fraction.denominator_;
 
-        if (num > std::numeric_limits<int>::max() || num < std::numeric_limits<int>::min() ||
-            den > std::numeric_limits<int>::max() || den < std::numeric_limits<int>::min())
+        if (num > numeric_limits<int>::max() || num < numeric_limits<int>::min() ||
+            den > numeric_limits<int>::max() || den < numeric_limits<int>::min())
         {
-            throw std::overflow_error("Overflow in operator-");
+            throw overflow_error("Overflow in operator-");
         }
 
         int new_numerator = static_cast<int>(num);
@@ -201,7 +191,6 @@ namespace ariel
 
         long long num = (long long)numerator_ * fraction.denominator_;
         long long den = (long long)denominator_ * fraction.numerator_;
-        cout << num << " /" << den << endl;
 
         if ((num > numeric_limits<int>::max() && den <= numeric_limits<int>::max()) ||
             (num < numeric_limits<int>::min() && den >= numeric_limits<int>::min()) ||
@@ -259,6 +248,7 @@ namespace ariel
     {
         int num1 = numerator_ * fraction.denominator_;
         int num2 = fraction.numerator_ * denominator_;
+        // cout << num1 << "<" << num2 << " -> " << (num1 < num2) << endl;
         return num1 < num2;
     }
 
@@ -276,6 +266,7 @@ namespace ariel
     {
         int num1 = numerator_ * fraction.denominator_;
         int num2 = fraction.numerator_ * denominator_;
+        //cout << num1 << ">" << num2 << " -> " << (num1 > num2) << endl;
         return num1 > num2;
     }
 
